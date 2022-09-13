@@ -1,9 +1,10 @@
 import { Link, Outlet } from "react-router-dom";
+import Video from "./components/video";
 
 function App() {
   return (
     <div>
-      <h1>Bookkeeper</h1>
+      <Video />
       <nav
         style={{
           borderBottom: "solid 1px",
