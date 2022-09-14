@@ -1,17 +1,28 @@
-export default function Video() {
-  navigator.mediaDevices.getDisplayMedia({
-    video: true
-  })
-  .then(stream => {
-    document.querySelector('#test').srcObject = stream;
-  })
-  .catch(error => {
+import { v4 as uuidv4 } from 'uuid';
 
-  })
+export default function Video() {
+  const videoID = uuidv4();
+
+  function joinMeeting() {
+    navigator.mediaDevices.getUserMedia({
+        video: true
+      })
+      .then(stream => {
+        document.getElementById(videoID).srcObject = stream;
+      })
+      .catch(error => {
+        console.error(error);
+      })
+  }
 
   return (
-    <video id="test" width="300" height="300" autoPlay>
+    <div>
+      <video id={videoID} width="400" height="400" autoPlay>
 
-    </video>
+      </video>
+      <div>
+        <button onClick={joinMeeting}>join meeting</button>
+      </div>
+    </div>
   )
 }
