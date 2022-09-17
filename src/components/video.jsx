@@ -45,7 +45,11 @@ export default function Video() {
     updateVideoTime();
   }
 
-
+  function handleProgressClick(event) {
+    const pos = (event.clientX - event.target.offsetLeft) / event.target.clientWidth;
+    const video = document.getElementById(videoID);
+    video.currentTime = pos * video.duration;
+  }
   
   function playVideo() {
     const video = document.getElementById(videoID);
@@ -83,7 +87,7 @@ export default function Video() {
       </video>
 
       <div>
-        <progress id='progress' max="100"></progress>
+        <progress id='progress' max="100" onClick={handleProgressClick}></progress>
       </div>
       
       <div>
