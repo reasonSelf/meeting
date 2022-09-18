@@ -4,7 +4,12 @@ export default function videoToolbar(props) {
   return (
     <div className="video-toolbar-wrapper">
       <div>
-        <progress style={{width: '100%'}}></progress>
+        <progress className='video-toolbar-progress'
+          max={props.duration}
+          value={props.currentTime}
+          onClick={props.handleProgressClick}
+        >
+        </progress>
       </div>
       
       <div className='video-toolbar-controls'>
@@ -21,6 +26,13 @@ export default function videoToolbar(props) {
             props.isFullscreen
               ? <button onClick={props.switchFullscreenState}>exit fullscreen</button>
               : <button onClick={props.switchFullscreenState}>fullscreen</button>
+          }
+        </div>
+        <div>
+          {
+            props.isMute
+              ? <button onClick={props.switchMuteState}>unmute</button>
+              : <button onClick={props.switchMuteState}>mute</button>
           }
         </div>
       </div>

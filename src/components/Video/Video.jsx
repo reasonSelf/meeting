@@ -7,6 +7,9 @@ export default function Video() {
   const videoID = uuidv4();
   const {isPlay, switchVideoState} = useIsPlay(videoID);
   const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
+  const {isMute, switchMuteState} = useIsMute(videoID);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   function joinMeeting() {
     navigator.mediaDevices.getUserMedia({
@@ -21,8 +24,10 @@ export default function Video() {
   }
 
   function handleOnLoadedMetadata() {
-    console.log(`metadata loaded at ${new Date().getTime()}`);
     updateVideoTime();
+    const video = document.getElementById(videoID);
+    setDuration(video.duration);
+    setCurrentTime(0);
   }
 
   function updateVideoTime() {
@@ -44,8 +49,9 @@ export default function Video() {
     console.log(`can not fetch video, try again!`);
   }
 
-  function handleOnProgress() {
-    console.log(`video in progress`);
+  function handleOnProgress(event) {
+    const video = document.getElementById(videoID);
+    setCurrentTime(video.currentTime);
     updateVideoTime();
   }
 
@@ -53,6 +59,7 @@ export default function Video() {
     const pos = (event.clientX - event.target.offsetLeft) / event.target.clientWidth;
     const video = document.getElementById(videoID);
     video.currentTime = pos * video.duration;
+    setCurrentTime(video.currentTime);
   }
 
   function handleBackVideoTime() {
@@ -68,10 +75,15 @@ export default function Video() {
   return (
     <div>
       <VideoToolbar 
+        duration={duration}
+        currentTime={currentTime}
         isPlay={isPlay} 
         switchVideoState={switchVideoState}
         isFullscreen={isFullscreen}
         switchFullscreenState={switchFullscreenState}
+        isMute={isMute}
+        switchMuteState={switchMuteState}
+        handleProgressClick={handleProgressClick}
       />
 
       <video 
@@ -153,5 +165,23 @@ function useIsFullscreen(videoID) {
   return {
     isFullscreen: isFullscreen,
     switchFullscreenState: switchFullscreenState
+  }
+}
+
+function useIsMute(videoID) {
+  const [isMute, setIsMute] = useState(false);
+
+  const switchMuteState = () => {
+    setIsMute(!isMute);
+  }
+
+  useEffect(() => {
+    const video = document.getElementById(videoID);
+    video.muted = isMute;
+  })
+
+  return {
+    isMute: isMute,
+    switchMuteState: switchMuteState
   }
 }
