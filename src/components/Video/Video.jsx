@@ -1,8 +1,12 @@
+import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import gean from '../media/asoul_gean.mp4'
+import gean from '../../media/asoul_gean.mp4'
+import VideoToolbar from '../VideoToolbar/VideoToolbar'
 
 export default function Video() {
   const videoID = uuidv4();
+  const {isPlay, switchVideoState} = useIsPlay(videoID);
+  const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
 
   function joinMeeting() {
     navigator.mediaDevices.getUserMedia({
@@ -50,16 +54,6 @@ export default function Video() {
     const video = document.getElementById(videoID);
     video.currentTime = pos * video.duration;
   }
-  
-  function playVideo() {
-    const video = document.getElementById(videoID);
-    video.play();
-  }
-
-  function pauseVideo() {
-    const video = document.getElementById(videoID);
-    video.pause();
-  }
 
   function handleBackVideoTime() {
     const video = document.getElementById(videoID);
@@ -73,6 +67,13 @@ export default function Video() {
 
   return (
     <div>
+      <VideoToolbar 
+        isPlay={isPlay} 
+        switchVideoState={switchVideoState}
+        isFullscreen={isFullscreen}
+        switchFullscreenState={switchFullscreenState}
+      />
+
       <video 
         id={videoID} 
         width="400" 
@@ -94,17 +95,63 @@ export default function Video() {
         <button onClick={joinMeeting}>join meeting</button>
       </div>
       <div>
-        <button onClick={playVideo}>play video</button>
-      </div>
-      <div>
-        <button onClick={pauseVideo}>pause</button>
-      </div>
-      <div>
         <button onClick={handleBackVideoTime}>back</button>
       </div>
       <div>
         <button onClick={handleGotoVideoTime}>goto</button>
       </div>
+
     </div>
   )
+}
+
+function useIsPlay(videoID) {
+  const [isPlay, setIsPlay] = useState(false);
+
+  const switchVideoState = () => {
+    setIsPlay(!isPlay);
+  }
+
+  useEffect(() => {
+    const video = document.getElementById(videoID);
+    if (isPlay) {
+      video.play();
+    } else {
+      video.pause();
+    }
+  })
+
+  return {
+    isPlay: isPlay,
+    switchVideoState: switchVideoState
+  }
+}
+
+function useIsFullscreen(videoID) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const switchFullscreenState = () => {
+    setIsFullscreen(!isFullscreen);
+  }
+
+  const handleFullscreenChange = () => {
+    setIsFullscreen(!isFullscreen);
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }
+
+  useEffect(() => {
+    const video = document.getElementById(videoID);
+
+    if (video) {
+      if (isFullscreen) {
+        video.requestFullscreen();
+        document.addEventListener('fullscreenchange', handleFullscreenChange)
+      } 
+    }
+  })
+
+  return {
+    isFullscreen: isFullscreen,
+    switchFullscreenState: switchFullscreenState
+  }
 }
