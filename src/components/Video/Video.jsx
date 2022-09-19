@@ -2,39 +2,24 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import gean from '../../media/asoul_gean.mp4'
 import VideoToolbar from '../VideoToolbar/VideoToolbar'
+import './Video.css'
 
 export default function Video() {
   const videoID = uuidv4();
   const {isPlay, switchVideoState} = useIsPlay(videoID);
   const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
-  const {isMute, switchMuteState} = useIsMute(videoID);
+  const {volume, setVolume} = useVolumn(videoID);
+  
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [showControls, setShowControls] = useState(false);
 
-  function joinMeeting() {
-    navigator.mediaDevices.getUserMedia({
-        video: true
-      })
-      .then(stream => {
-        document.getElementById(videoID).srcObject = stream;
-      })
-      .catch(error => {
-        console.error(error);
-      })
-  }
-
+  let showControlsTimer = null;
+  
   function handleOnLoadedMetadata() {
-    updateVideoTime();
     const video = document.getElementById(videoID);
     setDuration(video.duration);
     setCurrentTime(0);
-  }
-
-  function updateVideoTime() {
-    const video = document.getElementById(videoID);
-    const progress = document.getElementById('progress');
-    progress.setAttribute('max', video.duration);
-    progress.value = video.currentTime;
   }
 
   function handleOnSeeked() {
@@ -50,11 +35,14 @@ export default function Video() {
   }
 
   function handleOnProgress(event) {
-    const video = document.getElementById(videoID);
-    setCurrentTime(video.currentTime);
-    updateVideoTime();
+    // const video = document.getElementById(videoID);
+    // setCurrentTime(video.currentTime);
   }
 
+  function handleVideoClick() {
+    switchVideoState();
+  }
+  
   function handleProgressClick(event) {
     const pos = (event.clientX - event.target.offsetLeft) / event.target.clientWidth;
     const video = document.getElementById(videoID);
@@ -62,57 +50,80 @@ export default function Video() {
     setCurrentTime(video.currentTime);
   }
 
-  function handleBackVideoTime() {
+  function handleTimeUpdate() {
     const video = document.getElementById(videoID);
-    video.currentTime = video.currentTime - 10;
+    setCurrentTime(video.currentTime);
   }
 
-  function handleGotoVideoTime() {
+  function handleOnKeyDown(event) {
+    const key = event.key;
+    console.log(key);
+
     const video = document.getElementById(videoID);
-    video.currentTime = video.currentTime + 100;    
+    switch (key) {
+      case ' ':
+        switchVideoState();
+        break;
+      case 'ArrowRight':
+        video.currentTime = video.currentTime + 5;
+        break;
+      case 'ArrowLeft':
+        video.currentTime = video.currentTime - 5;
+        break;
+      case 'ArrowUp':
+        setVolume(volume + 0.1 > 1 ? 1 : volume + 0.1);
+        break;
+      case 'ArrowDown':
+        setVolume(volume - 0.1 < 0 ? 0 : volume - 0.1);
+        break;
+      default:
+        break;
+    }
+  }
+
+  function handleMouseMove() {
+    clearTimeout(showControlsTimer);
+    setShowControls(true);
+
+    showControlsTimer = setTimeout(() => {
+      setShowControls(false);
+    }, 4000);
+  }
+
+  const toolbarParams = {
+    duration: duration,
+    currentTime: currentTime,
+    isPlay: isPlay,
+    switchVideoState: switchVideoState,
+    isFullscreen: isFullscreen,
+    switchFullscreenState: switchFullscreenState,
+    handleProgressClick: handleProgressClick,
+    volume: volume,
+    setVolume: setVolume
   }
 
   return (
-    <div>
-      <VideoToolbar 
-        duration={duration}
-        currentTime={currentTime}
-        isPlay={isPlay} 
-        switchVideoState={switchVideoState}
-        isFullscreen={isFullscreen}
-        switchFullscreenState={switchFullscreenState}
-        isMute={isMute}
-        switchMuteState={switchMuteState}
-        handleProgressClick={handleProgressClick}
-      />
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
 
       <video 
+        style={{ backgroundColor: 'black' }}
+        className="video-wrapper"
         id={videoID} 
-        width="400" 
-        height="400" 
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleOnLoadedMetadata}
         onSeeked={handleOnSeeked}
         onCanPlay={handleOnCanplay}
         onStalled={handleOnStalled}
         onProgress={handleOnProgress}
+        onClick={handleVideoClick}
+        onKeyDown={handleOnKeyDown}
+        onMouseMove={handleMouseMove}
+        tabIndex="0"
         src={gean}> 
-
       </video>
 
-      <div>
-        <progress id='progress' max="100" onClick={handleProgressClick}></progress>
-      </div>
-      
-      <div>
-        <button onClick={joinMeeting}>join meeting</button>
-      </div>
-      <div>
-        <button onClick={handleBackVideoTime}>back</button>
-      </div>
-      <div>
-        <button onClick={handleGotoVideoTime}>goto</button>
-      </div>
-
+      { showControls ? <VideoToolbar {...toolbarParams} /> : null }
+      {/* <VideoToolbar {...toolbarParams} /> */}
     </div>
   )
 }
@@ -168,20 +179,16 @@ function useIsFullscreen(videoID) {
   }
 }
 
-function useIsMute(videoID) {
-  const [isMute, setIsMute] = useState(false);
-
-  const switchMuteState = () => {
-    setIsMute(!isMute);
-  }
+function useVolumn(videoID) {
+  const [volume, setVolume] = useState(1);
 
   useEffect(() => {
     const video = document.getElementById(videoID);
-    video.muted = isMute;
+    video.volume = volume;
   })
 
   return {
-    isMute: isMute,
-    switchMuteState: switchMuteState
+    volume: volume,
+    setVolume: setVolume
   }
 }
