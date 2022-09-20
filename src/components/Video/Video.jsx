@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import gean from '../../media/asoul_gean.mp4'
+// import gean from '../../media/asoul_gean.mp4'
+import frag from '../../media/frag_bunny.mp4'
 import VideoToolbar from '../VideoToolbar/VideoToolbar'
 import './Video.css'
 
 export default function Video() {
   const [videoID] = useState(uuidv4());
-
-  const {isPlay, switchVideoState} = useIsPlay(videoID);
-  const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
-  const {volume, setVolume} = useVolumn(videoID);
-  
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControl, setShowControl] = useState(false);
   const [clientX, setClinetx] = useState(0);
 
+  const {isPlay, switchVideoState} = useIsPlay(videoID);
+  const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
+  const {volume, setVolume} = useVolumn(videoID);
+  
   function handleOnLoadedMetadata() {
     const video = document.getElementById(videoID);
     setDuration(video.duration);
@@ -108,6 +108,27 @@ export default function Video() {
     }
   }, [showControl, clientX])
 
+  useEffect(() => {
+    const video = document.getElementById(videoID);
+    const m = new MediaSource();
+    video.src = URL.createObjectURL(m);
+    m.addEventListener('sourceopen', sourceOpen);
+
+    function sourceOpen() {
+    const sourceBuffer =  m.addSourceBuffer('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+    const xhr = new XMLHttpRequest();
+      xhr.open('get', frag);
+      xhr.responseType = 'arraybuffer';
+      xhr.onload = () => {
+        sourceBuffer.addEventListener('updateend', () => {
+        m.endOfStream();
+        });
+        sourceBuffer.appendBuffer(xhr.response)
+      }
+      xhr.send();
+    }
+  }, [videoID])
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
 
@@ -125,7 +146,8 @@ export default function Video() {
         onKeyDown={handleOnKeyDown}
         onMouseMove={handlemouseMove}
         tabIndex="0"
-        src={gean}> 
+        // src={gean}
+      > 
       </video>
 
       {
@@ -149,7 +171,7 @@ function useIsPlay(videoID) {
     } else {
       video.pause();
     }
-  })
+  }, [videoID, isPlay])
 
   return {
     isPlay: isPlay,
@@ -164,12 +186,12 @@ function useIsFullscreen(videoID) {
     setIsFullscreen(!isFullscreen);
   }
 
-  const handleFullscreenChange = () => {
-    setIsFullscreen(!isFullscreen);
-    document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }
-
   useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!isFullscreen);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }
+
     const video = document.getElementById(videoID);
 
     if (video) {
@@ -178,7 +200,11 @@ function useIsFullscreen(videoID) {
         document.addEventListener('fullscreenchange', handleFullscreenChange)
       } 
     }
-  })
+
+    return() => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }
+  }, [isFullscreen, videoID])
 
   return {
     isFullscreen: isFullscreen,
@@ -192,7 +218,7 @@ function useVolumn(videoID) {
   useEffect(() => {
     const video = document.getElementById(videoID);
     video.volume = volume;
-  })
+  }, [videoID, volume])
 
   return {
     volume: volume,
