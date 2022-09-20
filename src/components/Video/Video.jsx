@@ -5,17 +5,17 @@ import VideoToolbar from '../VideoToolbar/VideoToolbar'
 import './Video.css'
 
 export default function Video() {
-  const videoID = uuidv4();
+  const [videoID] = useState(uuidv4());
+
   const {isPlay, switchVideoState} = useIsPlay(videoID);
   const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
   const {volume, setVolume} = useVolumn(videoID);
   
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [showControls, setShowControls] = useState(false);
+  const [showControl, setShowControl] = useState(false);
+  const [clientX, setClinetx] = useState(0);
 
-  let showControlsTimer = null;
-  
   function handleOnLoadedMetadata() {
     const video = document.getElementById(videoID);
     setDuration(video.duration);
@@ -81,13 +81,9 @@ export default function Video() {
     }
   }
 
-  function handleMouseMove() {
-    clearTimeout(showControlsTimer);
-    setShowControls(true);
-
-    showControlsTimer = setTimeout(() => {
-      setShowControls(false);
-    }, 4000);
+  function handlemouseMove(event) {
+    setShowControl(true);
+    setClinetx(event.clientX)
   }
 
   const toolbarParams = {
@@ -101,6 +97,16 @@ export default function Video() {
     volume: volume,
     setVolume: setVolume
   }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowControl(false);
+    }, 3000);
+
+    return () => {
+      clearTimeout(timer);
+    }
+  }, [showControl, clientX])
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -117,13 +123,14 @@ export default function Video() {
         onProgress={handleOnProgress}
         onClick={handleVideoClick}
         onKeyDown={handleOnKeyDown}
-        onMouseMove={handleMouseMove}
+        onMouseMove={handlemouseMove}
         tabIndex="0"
         src={gean}> 
       </video>
 
-      { showControls ? <VideoToolbar {...toolbarParams} /> : null }
-      {/* <VideoToolbar {...toolbarParams} /> */}
+      {
+        showControl ? <VideoToolbar {...toolbarParams} /> : null
+      }
     </div>
   )
 }
