@@ -7,7 +7,7 @@ export default function videoToolbar(props) {
         
         <progress className='video-toolbar-progress'
           max={props.duration}
-          value={props.currentTime}
+          value={props.currentTime} 
           onClick={props.handleProgressClick}
         >
         </progress>
@@ -44,6 +44,19 @@ export default function videoToolbar(props) {
         </div>
 
         <div style={{ flexGrow: '1', justifyContent: 'flex-end', display: 'flex' }}>
+          <select
+            defaultValue={props.playbackRate}
+            onChange={(event) => { 
+              const select = event.currentTarget;
+              props.setPlaybackRate(select.options[select.selectedIndex].value)
+            }}
+          >
+            <option value="0.5">0.5</option>
+            <option value="1.0">1.0</option>
+            <option value="1.5">1.5</option>
+            <option value="2.0">2.0</option>
+          </select>
+          
           {
             props.isFullscreen
               ? <svg onClick={props.switchFullscreenState}><use href='#fullscreen-exit'></use></svg>

@@ -6,15 +6,17 @@ import VideoToolbar from '../VideoToolbar/VideoToolbar'
 import './Video.css'
 
 export default function Video() {
-  const [videoID] = useState(uuidv4());
+  console.log('render');
+  const videoID = useUUID();
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControl, setShowControl] = useState(false);
   const [clientX, setClinetx] = useState(0);
 
-  const {isPlay, switchVideoState} = useIsPlay(videoID);
+  const {isPlay, setIsPlay, switchVideoState} = useIsPlay(videoID);
   const {isFullscreen, switchFullscreenState} = useIsFullscreen(videoID);
   const {volume, setVolume} = useVolumn(videoID);
+  const {playbackRate, setPlaybackRate} = usePlaybackRate(videoID);
   
   function handleOnLoadedMetadata() {
     const video = document.getElementById(videoID);
@@ -39,6 +41,14 @@ export default function Video() {
     // setCurrentTime(video.currentTime);
   }
 
+  function handleOnPause() {
+    setIsPlay(false);
+  }
+
+  function handleOnPlay() {
+    setIsPlay(true);
+  }
+
   function handleVideoClick() {
     switchVideoState();
   }
@@ -51,6 +61,7 @@ export default function Video() {
   }
 
   function handleTimeUpdate() {
+    if (!showControl) return;
     const video = document.getElementById(videoID);
     setCurrentTime(video.currentTime);
   }
@@ -95,7 +106,9 @@ export default function Video() {
     switchFullscreenState: switchFullscreenState,
     handleProgressClick: handleProgressClick,
     volume: volume,
-    setVolume: setVolume
+    setVolume: setVolume,
+    playbackRate: playbackRate,
+    setPlaybackRate: setPlaybackRate
   }
 
   useEffect(() => {
@@ -145,6 +158,8 @@ export default function Video() {
         onClick={handleVideoClick}
         onKeyDown={handleOnKeyDown}
         onMouseMove={handlemouseMove}
+        onPause={handleOnPause}
+        onPlay={handleOnPlay}
         tabIndex="0"
         // src={gean}
       > 
@@ -175,7 +190,8 @@ function useIsPlay(videoID) {
 
   return {
     isPlay: isPlay,
-    switchVideoState: switchVideoState
+    setIsPlay: setIsPlay,
+    switchVideoState: switchVideoState,
   }
 }
 
@@ -224,4 +240,24 @@ function useVolumn(videoID) {
     volume: volume,
     setVolume: setVolume
   }
+}
+
+function usePlaybackRate(videoID) {
+  const [playbackRate, setPlaybackRate] = useState('1.0');
+
+  useEffect(() => {
+    const video = document.getElementById(videoID);
+    video.playbackRate = playbackRate;
+    
+  }, [videoID, playbackRate])
+
+  return {
+    playbackRate: playbackRate,
+    setPlaybackRate: setPlaybackRate
+  }
+}
+
+function useUUID() {
+  const [uuid] = useState(uuidv4());
+  return uuid;
 }
