@@ -6,7 +6,6 @@ import VideoToolbar from '../VideoToolbar/VideoToolbar'
 import './Video.css'
 
 export default function Video() {
-  console.log('render');
   const videoID = useUUID();
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -176,7 +175,7 @@ function useIsPlay(videoID) {
   const [isPlay, setIsPlay] = useState(false);
 
   const switchVideoState = () => {
-    setIsPlay(!isPlay);
+    setIsPlay(prevIsPlay => !prevIsPlay);
   }
 
   useEffect(() => {
@@ -199,12 +198,12 @@ function useIsFullscreen(videoID) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const switchFullscreenState = () => {
-    setIsFullscreen(!isFullscreen);
+    setIsFullscreen(state => !state);
   }
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!isFullscreen);
+      switchFullscreenState();
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }
 
